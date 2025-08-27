@@ -30,7 +30,7 @@ func main() {
 	})
 
 	// here will be routes
-	routes.UserRoutes(router)
+	routes.UserRoutes(router, conn)
 
 	fmt.Println("Server: " + "http://localhost:" + env.AppPort + "/")
 	http.ListenAndServe(":"+env.AppPort, router)
