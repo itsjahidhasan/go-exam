@@ -28,7 +28,7 @@ func LoadConfig() Config {
 		DBHost:  os.Getenv("DB_HOST"),
 		DBPort:  os.Getenv("DB_PORT"),
 		DBUser:  os.Getenv("DB_USER"),
-		DBPass:  os.Getenv("DB_PASS"),
+		DBPass:  os.Getenv("DB_PASSWORD"),
 		DBName:  os.Getenv("DB_NAME"),
 	}
 }

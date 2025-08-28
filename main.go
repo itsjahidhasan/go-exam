@@ -13,7 +13,7 @@ func main() {
 	log.Println("Go Exam Application")
 	// Application entry point
 	env := config.LoadConfig()
-	conn, err := db.Open(env.DBHost, env.DBPort, env.DBUser, env.DBPass, env.DBName)
+	conn, err := db.Open()
 	if err != nil {
 		log.Fatal("Database connection error: ", err)
 	}

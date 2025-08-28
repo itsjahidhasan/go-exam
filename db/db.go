@@ -2,6 +2,7 @@ package db
 
 import (
 	"database/sql"
+	"go-exam/config"
 	"log"
 
 	_ "github.com/lib/pq"
@@ -9,8 +10,9 @@ import (
 
 var DB *sql.DB
 
-func Open(host, port, user, pass, name string) (*sql.DB, error) {
-	dsn := "host=" + host + " port=" + port + " user=" + user + " password=" + pass + " dbname=" + name + " sslmode=disable"
+func Open() (*sql.DB, error) {
+	env := config.LoadConfig()
+	dsn := "host=" + env.DBHost + " port=" + env.DBPort + " user=" + env.DBUser + " password=" + env.DBPass + " dbname=" + env.DBName + " sslmode=disable"
 
 	dbConn, err := sql.Open("postgres", dsn)
 	if err != nil {

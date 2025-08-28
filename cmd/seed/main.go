@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"encoding/json"
-	"go-exam/config"
 	"go-exam/db"
 	"log"
 	"os"
@@ -16,8 +15,7 @@ type seedUser struct {
 }
 
 func main() {
-	env := config.LoadConfig()
-	conn, err := db.Open(env.DBHost, env.DBPort, env.DBUser, env.DBPass, env.DBName)
+	conn, err := db.Open()
 	if err != nil {
 		log.Fatal("Database connection error: ", err)
 	}
