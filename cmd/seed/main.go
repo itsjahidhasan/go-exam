@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
 	"go-exam/db"
 	"log"
@@ -14,6 +15,29 @@ type seedUser struct {
 	Age   int    `json:"age"`
 }
 
+func seedUsers(tx *sql.Tx) error {
+	b, err := os.ReadFile("seed/users.json")
+	if err != nil {
+		return err
+	}
+
+	var users []seedUser
+	if err := json.Unmarshal(b, &users); err != nil {
+		return err
+	}
+
+	ctx := context.Background()
+	for _, u := range users {
+		_, err := tx.ExecContext(ctx,
+			"INSERT INTO users (name, email, age) VALUES ($1, $2, $3)",
+			u.Name, u.Email, u.Age)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func main() {
 	conn, err := db.Open()
 	if err != nil {
@@ -21,31 +45,19 @@ func main() {
 	}
 	defer conn.Close()
 
-	b, err := os.ReadFile("seed.json")
-	if err != nil {
-		log.Fatal("Error reading seed file: ", err)
-	}
-
-	var users []seedUser
-	if err := json.Unmarshal(b, &users); err != nil {
-		log.Fatal("Error unmarshalling seed data: ", err)
-	}
-
 	tx, err := conn.Begin()
 	if err != nil {
 		log.Fatal("Error starting transaction: ", err)
 	}
 	defer tx.Rollback()
-	ctx := context.Background()
-	for _, u := range users {
-		_, err := tx.ExecContext(ctx, "INSERT INTO users (name, email, age) VALUES ($1, $2, $3)", u.Name, u.Email, u.Age)
-		if err != nil {
-			log.Fatal("Error inserting user: ", err)
-		}
+
+	if err := seedUsers(tx); err != nil {
+		log.Fatal("Error seeding users: ", err)
 	}
+
 	if err := tx.Commit(); err != nil {
 		log.Fatal("Error committing transaction: ", err)
 	}
-	log.Println("✔ seeding done")
 
+	log.Println("✔ Seeding done")
 }
