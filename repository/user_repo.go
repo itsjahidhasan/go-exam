@@ -15,13 +15,13 @@ func NewUserRepo(db *sql.DB) *UserRepo {
 }
 
 func (r *UserRepo) Create(ctx context.Context, u modals.User) error {
-	q := "INSERT INTO users (name,email,age) VALUES ($1,$2,$3) RETURNING id,created_at"
+	q := "INSERT INTO users (user_name,cash_balance) VALUES ($1,$2) RETURNING id,cash_balance"
 
-	return r.DB.QueryRowContext(ctx, q, u.Name, u.Email, u.Age).Scan(&u.ID, &u.CreatedAt)
+	return r.DB.QueryRowContext(ctx, q, u.Name, u.CashBalance).Scan(&u.ID)
 }
 
 func (r *UserRepo) GetAll(ctx context.Context) ([]modals.User, error) {
-	rows, err := r.DB.QueryContext(ctx, "SELECT id,name,email,age,created_at FROM users ORDER BY created_at DESC")
+	rows, err := r.DB.QueryContext(ctx, "SELECT id,name,cash_balance FROM users ORDER BY id DESC")
 
 	if err != nil {
 		return nil, err
@@ -30,7 +30,7 @@ func (r *UserRepo) GetAll(ctx context.Context) ([]modals.User, error) {
 	var out []modals.User
 	for rows.Next() {
 		var u modals.User
-		if err := rows.Scan(&u.ID, &u.Name, &u.Email, &u.Age, &u.CreatedAt); err != nil {
+		if err := rows.Scan(&u.ID, &u.Name, &u.CashBalance); err != nil {
 			return nil, err
 		}
 		out = append(out, u)
@@ -40,8 +40,8 @@ func (r *UserRepo) GetAll(ctx context.Context) ([]modals.User, error) {
 
 func (r *UserRepo) GetByID(ctx context.Context, id int64) (*modals.User, error) {
 	var u modals.User
-	q := "SELECT id,name,email,age,created_at FROM users WHERE id=$1"
-	err := r.DB.QueryRowContext(ctx, q, id).Scan(&u.ID, &u.Name, &u.Email, &u.Age, &u.CreatedAt)
+	q := "SELECT id,name,cash_balance FROM users WHERE id=$1"
+	err := r.DB.QueryRowContext(ctx, q, id).Scan(&u.ID, &u.Name, &u.CashBalance)
 
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -52,25 +52,20 @@ func (r *UserRepo) GetByID(ctx context.Context, id int64) (*modals.User, error) 
 	return &u, err
 }
 
-func (r *UserRepo) Update(ctx context.Context, u *modals.User) (*modals.User, error) {
-	q := "UPDATE users SET name=$1,email=$2,age=$3 WHERE id=$4 RETURNING id,name,email,age,created_at"
-	var out modals.User
-	err := r.DB.QueryRowContext(ctx, q, u.Name, u.Email, u.Age, u.ID).Scan(&out.ID, &out.Name, &out.Email, &out.Age, &out.CreatedAt)
+func (r *UserRepo) GetUserPurchaseHistory(ctx context.Context, id int64) ([]modals.UserPurchaseHistory, error) {
+	rows, err := r.DB.QueryContext(ctx, "SELECT (p.id,u.name,u.cash_balance,p.dish_id,p.amount) FROM purchase_history p JOIN users u on p.user_id = u.id WHERE p.user_id=$1", id)
+
 	if err != nil {
 		return nil, err
 	}
-	return &out, nil
-}
-
-func (r *UserRepo) Delete(ctx context.Context, id int64) (bool, error) {
-	res, err := r.DB.ExecContext(ctx, "DELETE FROM users WHERE id=$1", id)
-
-	if err != nil {
-		return false, err
+	defer rows.Close()
+	var out []modals.UserPurchaseHistory
+	for rows.Next() {
+		var u modals.UserPurchaseHistory
+		if err := rows.Scan(&u.ID, &u.Name, &u.CashBalance, &u.DishId, &u.DishPrice); err != nil {
+			return nil, err
+		}
+		out = append(out, u)
 	}
-	rowsAffected, err := res.RowsAffected()
-	if err != nil {
-		return false, err
-	}
-	return rowsAffected > 0, nil
+	return out, rows.Err()
 }
