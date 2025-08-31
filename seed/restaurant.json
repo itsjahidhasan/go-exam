@@ -1,4 +1,4 @@
 [
-  { "restaurant_name": "Haji Briyani", "cash_balance": 2500 },
-  { "restaurant_name": "MK Burgers", "cash_balance": 3000 }
+  { "Name": "Haji Briyani", "CashBalance": 2500 },
+  { "Name": "MK Burgers", "CashBalance": 3000 }
 ]

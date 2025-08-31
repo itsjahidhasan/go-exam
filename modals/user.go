@@ -16,15 +16,15 @@ type UserPurchaseHistory struct {
 }
 
 type UserPurchaseRequest struct {
-	UserId       int64  `json:"userId" db:"user_id"`
-	DishId       int64  `json:"dishId" db:"dish_id"`
-	RestaurantId int64  `json:"restaurantId" db:"restaurant_id"`
-	Amount       string `json:"amount" db:"amount"`
+	UserId       int64   `json:"userId" db:"user_id"`
+	DishId       int64   `json:"dishId" db:"dish_id"`
+	RestaurantId int64   `json:"restaurantId" db:"restaurant_id"`
+	Amount       float64 `json:"amount" db:"amount"`
 }
 type UserPurchaseResponse struct {
-	ID           int64  `json:"id" db:"id"`
-	UserId       int64  `json:"userId" db:"user_id"`
-	DishId       int64  `json:"dishId" db:"dish_id"`
-	RestaurantId int64  `json:"restaurantId" db:"restaurant_id"`
-	Amount       string `json:"amount" db:"amount"`
+	ID           int64   `json:"id" db:"id"`
+	UserId       int64   `json:"userId" db:"user_id"`
+	DishId       int64   `json:"dishId" db:"dish_id"`
+	RestaurantId int64   `json:"restaurantId" db:"restaurant_id"`
+	Amount       float64 `json:"amount" db:"amount"`
 }

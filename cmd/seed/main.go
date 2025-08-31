@@ -5,27 +5,26 @@ import (
 	"database/sql"
 	"encoding/json"
 	"go-exam/db"
-	"go-exam/modals"
 	"log"
 	"os"
 )
 
 type seedUser struct {
-	Name        string `json:"name"`
-	CashBalance string `json:"cashBalance"`
+	Name        string  `json:"name"`
+	CashBalance float64 `json:"cashBalance"`
 }
 type seedRestaurant struct {
-	Name        string `json:"name"`
-	CashBalance string `json:"cashBalance"`
+	Name        string  `json:"name"`
+	CashBalance float64 `json:"cashBalance"`
 }
 
 type seedRestaurantMenu struct {
-	Name  string `json:"menu_name"`
-	Price string `json:"price"`
+	Name  string  `json:"name"`
+	Price float64 `json:"price"`
 }
 
 func seedUsers(tx *sql.Tx) error {
-	b, err := os.ReadFile("seed/users.json")
+	b, err := os.ReadFile("seed/user.json")
 	if err != nil {
 		return err
 	}
@@ -58,23 +57,24 @@ func seedRestaurants(tx *sql.Tx) ([]int64, error) {
 		return nil, err
 	}
 
-	var restaurantId []int64
-
+	var restaurantIds []int64
 	ctx := context.Background()
-	for _, u := range restaurant {
-		var restaurantResult modals.Restaurant
-		row := tx.QueryRowContext(ctx,
-			"INSERT INTO restaurant (restaurant_name, cash_balance) VALUES ($1, $2)",
-			u.Name, u.CashBalance)
-		if err := row.Scan(&restaurantResult.ID, &restaurantResult.Name, &restaurantResult.CashBalance); err != nil {
+
+	for _, r := range restaurant {
+		var id int64
+		// RETURNING id allows us to capture the generated ID
+		err := tx.QueryRowContext(ctx,
+			"INSERT INTO restaurant (restaurant_name, cash_balance) VALUES ($1, $2) RETURNING id",
+			r.Name, r.CashBalance).Scan(&id)
+		if err != nil {
 			return nil, err
 		}
-		restaurantId = append(restaurantId, restaurantResult.ID)
+		restaurantIds = append(restaurantIds, id)
 	}
-	return restaurantId, nil
+	return restaurantIds, nil
 }
 
-func seedRestaurantMenus(tx *sql.Tx) error {
+func seedRestaurantMenus(tx *sql.Tx, restaurantIds []int64) error {
 	b, err := os.ReadFile("seed/restaurant_menu.json")
 	if err != nil {
 		return err
@@ -85,18 +85,14 @@ func seedRestaurantMenus(tx *sql.Tx) error {
 		return err
 	}
 
-	// var restaurantId []int64
-
 	ctx := context.Background()
-	for _, u := range restaurantMenu {
-		var restaurantResult modals.Restaurant
-		row := tx.QueryRowContext(ctx,
-			"INSERT INTO restaurant_menu (menu_name, price,restaurant_id) VALUES ($1, $2, $3)",
-			u.Name, u.Price)
-		if err := row.Scan(&restaurantResult.ID, &restaurantResult.Name, &restaurantResult.CashBalance); err != nil {
+	for i, m := range restaurantMenu {
+		_, err := tx.ExecContext(ctx,
+			"INSERT INTO restaurant_menu (menu_name, price, restaurant_id) VALUES ($1, $2, $3)",
+			m.Name, m.Price, restaurantIds[i])
+		if err != nil {
 			return err
 		}
-
 	}
 	return nil
 }
@@ -120,7 +116,11 @@ func main() {
 	rId, err := seedRestaurants(tx)
 	log.Println(len(rId))
 	if err != nil {
-		log.Fatal("Error seeding users: ", err)
+		log.Fatal("Error seeding Restaurants: ", err)
+	}
+
+	if err := seedRestaurantMenus(tx, rId); err != nil {
+		log.Fatal("Error seeding Restaurant menus: ", err)
 	}
 
 	if err := tx.Commit(); err != nil {

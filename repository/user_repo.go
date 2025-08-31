@@ -22,7 +22,7 @@ func (r *UserRepo) Create(ctx context.Context, u modals.User) error {
 }
 
 func (r *UserRepo) GetAll(ctx context.Context) ([]modals.User, error) {
-	rows, err := r.DB.QueryContext(ctx, "SELECT id,name,cash_balance FROM users ORDER BY id DESC")
+	rows, err := r.DB.QueryContext(ctx, "SELECT id,user_name,cash_balance FROM users ORDER BY id DESC")
 
 	if err != nil {
 		return nil, err
@@ -69,7 +69,7 @@ func (r *UserRepo) GetUserPurchaseHistory(ctx context.Context, id int64) ([]moda
 	var out []modals.UserPurchaseHistory
 	for rows.Next() {
 		var u modals.UserPurchaseHistory
-		if err := rows.Scan(&u.ID, &u.Name, &u.CashBalance, &u.DishId, &u.DishPrice, u.RestaurantName); err != nil {
+		if err := rows.Scan(&u.ID, &u.Name, &u.CashBalance, &u.DishId, &u.DishPrice, &u.RestaurantName); err != nil {
 			return nil, err
 		}
 		out = append(out, u)
@@ -104,7 +104,7 @@ func (r *UserRepo) PurchaseDish(ctx context.Context, d modals.UserPurchaseReques
 	if err != nil {
 		log.Println("Failed to exec query for updating user cash_balance")
 	}
-	_, err = tx.ExecContext(ctx, q)
+	_, err = tx.ExecContext(ctx, q, d.DishId, d.RestaurantId, d.UserId, d.Amount)
 	if err != nil {
 		log.Println("Failed to exec query for insert purchase_history")
 	}
