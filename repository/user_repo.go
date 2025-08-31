@@ -82,7 +82,7 @@ func (r *UserRepo) PurchaseDish(ctx context.Context, d modals.UserPurchaseReques
 		UPDATE restaurant SET cash_balance=cash_balance+$1 WHERE id=$2
 	`
 	updateUserBalanceQuery := `
-		UPDATE users SET cash_balance=cash_balance - $1 WHERE id=$2
+		UPDATE users SET cash_balance=cash_balance - $1 WHERE cash_balance > $1 AND id=$2
 	`
 	q := `
 		INSERT INTO purchase_history (dish_id,restaurant_id,user_id,amount) 
@@ -96,11 +96,11 @@ func (r *UserRepo) PurchaseDish(ctx context.Context, d modals.UserPurchaseReques
 
 	defer tx.Rollback()
 
-	_, err = tx.ExecContext(ctx, updateRestaurantBalanceQuery)
+	_, err = tx.ExecContext(ctx, updateRestaurantBalanceQuery, d.Amount, d.UserId)
 	if err != nil {
 		log.Println("Failed to exec query for updating restaurant cash_balance")
 	}
-	_, err = tx.ExecContext(ctx, updateUserBalanceQuery)
+	_, err = tx.ExecContext(ctx, updateUserBalanceQuery, d.Amount, d.UserId)
 	if err != nil {
 		log.Println("Failed to exec query for updating user cash_balance")
 	}
