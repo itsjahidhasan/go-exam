@@ -14,3 +14,18 @@ func WriteJSON(w http.ResponseWriter, code int, v interface{}) {
 func WriteError(w http.ResponseWriter, code int, message string) {
 	WriteJSON(w, code, map[string]string{"error": message})
 }
+
+func ResponseModifier(d any, m string, s bool) map[string]any {
+	if !s {
+		return map[string]any{
+			"error":   d,
+			"message": m,
+			"status":  s,
+		}
+	}
+	return map[string]any{
+		"data":    d,
+		"message": m,
+		"status":  s,
+	}
+}

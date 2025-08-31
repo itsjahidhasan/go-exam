@@ -1,4 +1,4 @@
 [
-  { "name": "Alice", "email": "alice@example.com", "age": 25 },
-  { "name": "Bob",   "email": "bob@example.com",   "age": 30 }
+  { "Name": "Alice", "CashBalance": 2500 },
+  { "Name": "Bob", "CashBalance": 3000 }
 ]

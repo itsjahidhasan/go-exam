@@ -13,4 +13,6 @@ func UserRoutes(r *http.ServeMux, c *sql.DB) {
 	handler.SetUserRepo(userRepo)
 	// Placeholder for user routes
 	r.HandleFunc(("GET /users"), handler.UserGetAll)
+	r.HandleFunc(("GET /RestaurantListWithPurchaseHistory/"), handler.UserGetAllPurchaseHistoryWithRestaurant)
+	r.HandleFunc(("POST /PurchaseDish/"), handler.PurchaseDish)
 }
