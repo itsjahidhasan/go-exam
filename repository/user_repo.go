@@ -57,7 +57,8 @@ func (r *UserRepo) GetUserPurchaseHistory(ctx context.Context, id int64) ([]moda
 	q := `
 	SELECT p.id,u.user_name,u.cash_balance,p.dish_id,p.amount,r.restaurant_name FROM 
 	purchase_history p JOIN users u ON p.user_id = u.id 
-	JOIN restaurant r ON p.restaurant_id = r.id WHERE p.user_id=$1
+	JOIN restaurant r ON p.restaurant_id = r.id
+	WHERE p.user_id=$1
 	`
 	rows, err := r.DB.QueryContext(ctx, q, id)
 
@@ -96,7 +97,7 @@ func (r *UserRepo) PurchaseDish(ctx context.Context, d modals.UserPurchaseReques
 
 	defer tx.Rollback()
 
-	_, err = tx.ExecContext(ctx, updateRestaurantBalanceQuery, d.Amount, d.UserId)
+	_, err = tx.ExecContext(ctx, updateRestaurantBalanceQuery, d.Amount, d.RestaurantId)
 	if err != nil {
 		log.Println("Failed to exec query for updating restaurant cash_balance")
 	}
@@ -104,8 +105,9 @@ func (r *UserRepo) PurchaseDish(ctx context.Context, d modals.UserPurchaseReques
 	if err != nil {
 		log.Println("Failed to exec query for updating user cash_balance")
 	}
-	_, err = tx.ExecContext(ctx, q, d.DishId, d.RestaurantId, d.UserId, d.Amount)
-	if err != nil {
+	var res modals.UserPurchaseResponse
+	row := tx.QueryRowContext(ctx, q, d.DishId, d.RestaurantId, d.UserId, d.Amount)
+	if err := row.Scan(&res.ID, &res.UserId, &res.DishId, &res.RestaurantId, &res.Amount); err != nil {
 		log.Println("Failed to exec query for insert purchase_history")
 	}
 
@@ -113,5 +115,5 @@ func (r *UserRepo) PurchaseDish(ctx context.Context, d modals.UserPurchaseReques
 		log.Fatalln("Transaction Failed:", err)
 	}
 
-	return modals.UserPurchaseResponse{}, nil
+	return res, nil
 }
